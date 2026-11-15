@@ -58,3 +58,16 @@ A reference guide to legitimate data and media sources for the **Ultimate Footba
 | **Official NFL Podcasts** | https://www.nfl.com/ (Apple/Spotify/iHeart RSS) | Audio | **Personal listening only.** Store RSS/episode metadata; no redistribution or AI/ML training. |
 | **NFL / NFL Films YouTube** | https://www.youtube.com/@NFL<br>https://www.youtube.com/nflfilms | Video highlights, documentaries | **Link/Embed only.** YouTube ToS prohibits third-party downloading. |
 | **NFL+ / NFL+ Premium** | https://plus.nfl.com | Full games, All-22 coaches film, live audio | **Link/Stream only.** Strict Widevine/FairPlay DRM; do not rip or circumvent. |
+
+---
+
+## 5. Team Logos, Colors, Wordmarks & Headshots
+
+| Source | URL | Data Covered | Access & Cost | Legitimacy / Vault Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| **nflverse** (`load_teams()` / `teams_colors_logos.csv`) | https://raw.githubusercontent.com/nflverse/nflverse-data/master/teams/teams_colors_logos.csv<br>https://github.com/nflverse/nflplotR | NFL team IDs, 4 hex colors (`team_color`–`team_color4`), Wikipedia/ESPN/squared logos, wordmarks, conference/league logos, plus `headshot_url` in rosters | `nflreadpy.load_teams()` / `load_rosters()` (Python) or direct CSV. **Free**, no API key. | **Best-in-class primary source for NFL.** MIT / CC-BY 4.0. Store logo URLs as metadata references; trademarked logos remain team/league IP. |
+| **CollegeFootballData (CFBD)** (`/teams`, `/teams/fbs`) | https://collegefootballdata.com/ | NCAA school names, mascots, conferences, `color`, `alt_color`, and `logos` array (light/dark ESPN CDN PNGs) | Official REST API (`GET /teams`, `GET /teams/fbs`). Free (~1,000 calls/mo) with API key. | **Best-in-class primary source for CFB.** Personal caching allowed; store logo URLs as metadata references. |
+| **cfbplotR** (`sportsdataverse/cfbplotR`) | https://github.com/sportsdataverse/cfbplotR<br>https://kazink36.github.io/cfbplotR/ | FBS & FCS school name aliases (`valid_team_names()`), primary/secondary colors, logo URLs, wordmarks, headshots (`logo_ref`) | Open-source R package (`sportsdataverse/cfbplotR`) and `data-raw/` scripts. **Free** (MIT). | **Great companion for CFB** team-name normalization and color/logo mappings. |
+| **Wikimedia Commons** | https://commons.wikimedia.org/ | Historical team graphics, stadium photos, public-domain/CC-licensed emblems | Direct download / Wikimedia API. **Free**. | **Archivable locally** *only* when per-file license is `CC0`, `CC-BY`, `CC-BY-SA`, or `PD` (modern team logos are often fair-use only). |
+| **SportsLogos.net** | https://www.sportslogos.net/ | Historical NFL/CFB logos, uniforms, and branding timelines | Consumer web UI only. | **Manual reference only.** ToS prohibits automated scraping and mass downloading; logos remain league/team IP. |
+| **LogoDix** | https://logodix.com/lists/nfl-logos | User-uploaded NFL team logo collections | Consumer web UI only. | **Manual reference only.** ToS grants limited personal site access only and excludes rights/licenses to the underlying trademarked logos. |
