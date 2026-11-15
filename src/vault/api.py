@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import math
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -119,6 +120,13 @@ def list_duckdb_views() -> dict[str, list[str]]:
     return {"views": [r[0] for r in rows]}
 
 
+def _sanitize_value(val: Any) -> Any:
+    """Convert non-JSON-compliant floats (NaN/Inf) to None."""
+    if isinstance(val, float) and (math.isnan(val) or math.isinf(val)):
+        return None
+    return val
+
+
 @app.post("/query")
 def run_duckdb_query(payload: QueryRequest) -> dict[str, Any]:
     """Execute a read-only SQL query against DuckDB."""
@@ -132,7 +140,10 @@ def run_duckdb_query(payload: QueryRequest) -> dict[str, Any]:
         with get_duckdb_conn() as con:
             rel = con.execute(sql)
             cols = [desc[0] for desc in rel.description] if rel.description else []
-            rows = [dict(zip(cols, row)) for row in rel.fetchmany(500)]
+            rows = [
+                {col: _sanitize_value(val) for col, val in zip(cols, row)}
+                for row in rel.fetchmany(500)
+            ]
         return {"columns": cols, "rows": rows}
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc

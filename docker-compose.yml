@@ -55,6 +55,26 @@ services:
           cpus: "2.0"
           memory: 4G
 
+  vault-web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: football_vault_web
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:80"
+    depends_on:
+      - vault-api
+    networks:
+      - vault_net
+    security_opt:
+      - "no-new-privileges:true"
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+
 networks:
   vault_net:
     driver: bridge
