@@ -59,11 +59,15 @@ DASHBOARD_HTML = """<!DOCTYPE html>
     <section id="overview" class="tab active">
       <div class="card">
         <h3>Sync Pipelines</h3>
+        <div class="form-row" style="margin-bottom:12px;">
+          <input id="syncSeasons" placeholder="Seasons (optional, e.g. 2020-2023 or 2021,2022 — blank uses .env)" />
+        </div>
         <div class="actions">
-          <button class="primary" onclick="runSync('/sync/nfl', this)">Sync NFL</button>
-          <button class="primary" onclick="runSync('/sync/cfb', this)">Sync CFB</button>
-          <button class="primary" onclick="runSync('/sync/sleeper', this)">Sync Sleeper</button>
-          <button class="primary" onclick="runSync('/sync/weather', this)">Sync Weather</button>
+          <button class="primary" onclick="runSync('/sync/current', this)">Quick Sync: Current Season Only</button>
+          <button class="secondary" onclick="runSync('/sync/nfl', this)">Sync NFL</button>
+          <button class="secondary" onclick="runSync('/sync/cfb', this)">Sync CFB</button>
+          <button class="secondary" onclick="runSync('/sync/sleeper', this)">Sync Sleeper</button>
+          <button class="secondary" onclick="runSync('/sync/weather', this)">Sync Weather</button>
           <button class="secondary" onclick="runSync('/media/scan', this)">Scan Local Media</button>
         </div>
         <pre id="syncOutput" style="display:none; margin-top:12px;"></pre>
@@ -157,13 +161,42 @@ DASHBOARD_HTML = """<!DOCTYPE html>
       const runs = await fetch('/runs?limit=15').then(r => r.json());
       renderTable(document.getElementById('runsTable'), runs);
     }
+    function parseSeasonsInput() {
+      const raw = document.getElementById('syncSeasons').value.trim();
+      if (!raw) return null;
+      const years = new Set();
+      for (const part of raw.split(',')) {
+        const s = part.trim();
+        if (!s) continue;
+        const range = s.match(/^(\d{4})\s*-\s*(\d{4})$/);
+        if (range) {
+          const a = Number(range[1]), b = Number(range[2]);
+          for (let y = Math.min(a, b); y <= Math.max(a, b); y++) years.add(y);
+        } else if (/^\d{4}$/.test(s)) {
+          years.add(Number(s));
+        } else {
+          throw new Error(`Invalid season format: "${s}". Use YYYY or YYYY-YYYY.`);
+        }
+      }
+      return Array.from(years).sort((a, b) => a - b);
+    }
     async function runSync(path, btn) {
+      let seasons = null;
+      if (path === '/sync/nfl' || path === '/sync/cfb' || path === '/sync/weather') {
+        try { seasons = parseSeasonsInput(); }
+        catch (err) { alert(err.message); return; }
+      }
       btn.disabled = true;
       const out = document.getElementById('syncOutput');
       out.style.display = 'block';
-      out.textContent = 'Running ' + path + '...';
+      out.textContent = 'Running ' + path + (seasons ? ` for [${seasons.join(', ')}]` : '') + '...';
       try {
-        const res = await fetch(path, { method: 'POST' });
+        const opts = { method: 'POST' };
+        if (seasons) {
+          opts.headers = { 'Content-Type': 'application/json' };
+          opts.body = JSON.stringify({ seasons });
+        }
+        const res = await fetch(path, opts);
         out.textContent = JSON.stringify(await res.json(), null, 2);
         await loadOverview();
       } finally { btn.disabled = false; }

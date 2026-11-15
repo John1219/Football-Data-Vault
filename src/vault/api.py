@@ -9,7 +9,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel
 
-from vault.config import settings
+from vault.config import current_football_season, settings
 from vault.db import get_duckdb_conn, get_pg_conn
 from vault.ingest_cfb import sync_cfb
 from vault.ingest_nfl import sync_nfl
@@ -23,16 +23,21 @@ ALLOWED_SQL_PREFIXES = ("SELECT", "WITH", "SHOW", "DESCRIBE", "EXPLAIN")
 
 
 async def _auto_sync_loop() -> None:
-    """Periodically run NFL, Sleeper, and CFB syncs when AUTO_SYNC_ENABLED=true."""
+    """Periodically sync the current season when AUTO_SYNC_ENABLED=true."""
     interval_seconds = max(1, settings.auto_sync_interval_hours) * 3600
     while True:
         await asyncio.sleep(interval_seconds)
         try:
-            await asyncio.to_thread(sync_nfl)
+            season = current_football_season()
+            await asyncio.to_thread(
+                sync_nfl,
+                seasons=[season],
+                datasets=["schedules", "rosters", "player_stats", "pbp", "injuries", "contracts"],
+            )
             await asyncio.to_thread(sync_sleeper)
             if settings.cfbd_api_key:
-                await asyncio.to_thread(sync_cfb)
-            logger.info("Scheduled vault sync completed.")
+                await asyncio.to_thread(sync_cfb, seasons=[season])
+            logger.info("Scheduled current-season (%s) sync completed.", season)
         except Exception:
             logger.exception("Scheduled vault sync failed.")
 
@@ -76,6 +81,13 @@ class QueryRequest(BaseModel):
     """Read-only SQL query payload for DuckDB."""
 
     sql: str
+
+
+class SyncRequest(BaseModel):
+    """Optional seasons/datasets filter for sync endpoints."""
+
+    seasons: list[int] | None = None
+    datasets: list[str] | None = None
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -136,16 +148,19 @@ def list_ingestion_runs(limit: int = Query(default=25, le=200)) -> list[dict[str
 
 
 @app.post("/sync/nfl")
-def trigger_nfl_sync(seasons: list[int] | None = None, datasets: list[str] | None = None) -> dict[str, int]:
+def trigger_nfl_sync(payload: SyncRequest | None = None) -> dict[str, int]:
     """Trigger NFL dataset sync via nflreadpy."""
-    return sync_nfl(seasons=seasons, datasets=datasets)
+    return sync_nfl(
+        seasons=payload.seasons if payload else None,
+        datasets=payload.datasets if payload else None,
+    )
 
 
 @app.post("/sync/cfb")
-def trigger_cfb_sync(seasons: list[int] | None = None) -> dict[str, int]:
+def trigger_cfb_sync(payload: SyncRequest | None = None) -> dict[str, int]:
     """Trigger College Football sync via CFBD API."""
     try:
-        return sync_cfb(seasons=seasons)
+        return sync_cfb(seasons=payload.seasons if payload else None)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -157,9 +172,24 @@ def trigger_sleeper_sync(force_players: bool = False) -> dict[str, int]:
 
 
 @app.post("/sync/weather")
-def trigger_weather_sync(seasons: list[int] | None = None) -> dict[str, int]:
+def trigger_weather_sync(payload: SyncRequest | None = None) -> dict[str, int]:
     """Trigger NFL game-day weather enrichment via Open-Meteo."""
-    return sync_nfl_weather(seasons=seasons)
+    return sync_nfl_weather(seasons=payload.seasons if payload else None)
+
+
+@app.post("/sync/current")
+def trigger_current_season_sync() -> dict[str, Any]:
+    """Quick-sync only the current active season across NFL, Sleeper, and CFB."""
+    season = current_football_season()
+    summary: dict[str, Any] = {"season": season}
+    summary["nfl"] = sync_nfl(
+        seasons=[season],
+        datasets=["schedules", "rosters", "player_stats", "pbp", "injuries", "contracts"],
+    )
+    summary["sleeper"] = sync_sleeper()
+    if settings.cfbd_api_key:
+        summary["cfb"] = sync_cfb(seasons=[season])
+    return summary
 
 
 @app.post("/media/scan")

@@ -1,7 +1,14 @@
 """Configuration settings for the Football Data Vault."""
 
+from datetime import datetime, timezone
 from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def current_football_season() -> int:
+    """Return the active NFL/CFB season year (Jan-Jul maps to prior year)."""
+    now = datetime.now(timezone.utc)
+    return now.year if now.month >= 8 else now.year - 1
 
 
 class Settings(BaseSettings):
