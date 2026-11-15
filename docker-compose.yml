@@ -1,0 +1,63 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: football_vault_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-football_vault}
+      POSTGRES_USER: ${POSTGRES_USER:-vault_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_to_a_strong_password}
+    ports:
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-5433}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - vault_net
+    security_opt:
+      - "no-new-privileges:true"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vault_admin} -d ${POSTGRES_DB:-football_vault}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+
+  vault-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: football_vault_api
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-vault_admin}:${POSTGRES_PASSWORD:-change_me_to_a_strong_password}@postgres:5432/${POSTGRES_DB:-football_vault}
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - ./data:/data
+      - ./src:/app/src
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - vault_net
+    security_opt:
+      - "no-new-privileges:true"
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+
+networks:
+  vault_net:
+    driver: bridge
+
+volumes:
+  pgdata:

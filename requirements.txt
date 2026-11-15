@@ -1,0 +1,8 @@
+nflreadpy>=0.1.5
+duckdb>=2.0.0
+polars>=1.0.0
+psycopg[binary]>=3.2.0
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+httpx>=0.28.0
+pydantic-settings>=2.6.0
