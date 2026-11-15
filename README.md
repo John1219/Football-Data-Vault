@@ -17,7 +17,11 @@ A self-hosted, Dockerized personal football data vault combining:
    ```powershell
    docker compose up -d --build
    ```
-   Both services bind strictly to `127.0.0.1` (`5432` for PostgreSQL, `8000` for the FastAPI service).
+   All services bind strictly to `127.0.0.1` (`5433` by default for PostgreSQL, `8000` for `vault-api`, and `3000` for `vault-web`).
+   To run only the backend (`postgres` + `vault-api`) without the optional Studio container:
+   ```powershell
+   docker compose up -d --build postgres vault-api
+   ```
 
 3. **Verify health:**
    ```powershell
@@ -47,3 +51,33 @@ A self-hosted, Dockerized personal football data vault combining:
    docker compose exec vault-api python -m vault.cli scan-media
    ```
    For copyrighted/DRM streams (NFL+, YouTube), register them as link-only metadata via `POST http://127.0.0.1:8000/media/register` with `"is_local_file": false`.
+
+## Optional: Football Data Vault Studio (Separate Docker Container)
+
+The `vault-web` service (`football_vault_web`) runs **Football Data Vault Studio**—a standalone React + Vite + Chart.js frontend served by Nginx in its own container (`./web/Dockerfile`). It includes:
+- **Play-by-Play Recreator**
+- **Advanced Analytics**
+- **SQL & Chart Studio**
+- **Vault & Media Manager**
+
+### Setup & Commands
+
+1. **Build and start the Studio container** (alongside `vault-api` and `postgres` if not already running):
+   ```powershell
+   docker compose up -d --build vault-web
+   ```
+   > **Note:** `vault-web` binds strictly to `127.0.0.1:3000` (`127.0.0.1:3000:80`) and proxies `/api/*` requests to `http://vault-api:8000/` over the internal `vault_net` Docker bridge network.
+
+2. **Open the Studio in your browser:**
+   ```text
+   http://127.0.0.1:3000
+   ```
+
+3. **View Studio logs or stop only the Studio container:**
+   ```powershell
+   # Follow Nginx / web container logs
+   docker compose logs -f vault-web
+
+   # Stop only the Studio container while keeping postgres and vault-api running
+   docker compose stop vault-web
+   ```
