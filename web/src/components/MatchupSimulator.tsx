@@ -56,7 +56,7 @@ export default function MatchupSimulator() {
   const [awayTeam, setAwayTeam] = useState<string>('BAL');
   const [homeTeam, setHomeTeam] = useState<string>('KC');
   const [availableSeasons, setAvailableSeasons] = useState<number[]>([]);
-  const [windowMode, setWindowMode] = useState<'1' | '2' | '3'>('2');
+  const [windowMode, setWindowMode] = useState<'1' | '2' | '3' | '5' | '10'>('2');
   const [numSims, setNumSims] = useState<number>(2500);
   const [hfaPoints, setHfaPoints] = useState<number>(2.0);
   const [awayPassShift, setAwayPassShift] = useState<number>(0);
@@ -89,9 +89,7 @@ export default function MatchupSimulator() {
 
   const targetSeasons = useMemo(() => {
     const count = Number(windowMode);
-    const completed = availableSeasons.filter((s) => s <= 2025);
-    const base = completed.length > 0 ? completed : availableSeasons;
-    return base.slice(0, count);
+    return availableSeasons.slice(0, count);
   }, [availableSeasons, windowMode]);
 
   useEffect(() => {
@@ -351,12 +349,14 @@ export default function MatchupSimulator() {
             <label className="mb-1 block text-xs text-slate-400">Historical Baseline</label>
             <select
               value={windowMode}
-              onChange={(e) => setWindowMode(e.target.value as '1' | '2' | '3')}
+              onChange={(e) => setWindowMode(e.target.value as '1' | '2' | '3' | '5' | '10')}
               className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-1.5 text-sm text-slate-100"
             >
-              <option value="1">Latest Season ({targetSeasons[0] ?? ''})</option>
+              <option value="1">Latest Season ({availableSeasons[0] ?? ''})</option>
               <option value="2">Last 2 Seasons</option>
               <option value="3">Last 3 Seasons</option>
+              <option value="5">Last 5 Seasons</option>
+              <option value="10">Last 10 Seasons</option>
             </select>
           </div>
           <div>
