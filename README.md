@@ -55,10 +55,26 @@ A self-hosted, Dockerized personal football data vault combining:
 ## Optional: Football Data Vault Studio (Separate Docker Container)
 
 The `vault-web` service (`football_vault_web`) runs **Football Data Vault Studio**—a standalone React + Vite + Chart.js frontend served by Nginx in its own container (`./web/Dockerfile`). It includes:
-- **Play-by-Play Recreator**
-- **Advanced Analytics**
-- **SQL & Chart Studio**
-- **Vault & Media Manager**
+- **Play-by-Play Recreator** — Interactive field canvas with drive/play playback, EPA/WPA telemetry, and win probability timeline.
+- **Advanced Analytics** — 32-team EPA efficiency matrix with official NFL logos & colors, multi-position leaderboards, contract APY breakdown, and weather impact charts.
+- **Tendencies Lab** — Situational pass/run rates vs. league average, depth × direction pass target zones, and run-gap efficiency.
+- **Matchup Simulator** — Historical Monte Carlo game simulator (2,500+ simulations) with score margin distributions and drive-by-drive box scores.
+- **SQL & Chart Studio** — Direct DuckDB SQL workbench with instant charting.
+- **Vault & Media Manager** — Ingestion status, one-click syncs, and local/link-only media indexing.
+
+### Screenshots
+
+#### Play-by-Play Recreator
+![Play-by-Play Recreator](docs/screenshots/play-recreator.png)
+
+#### Advanced Analytics
+![Advanced Analytics](docs/screenshots/advanced-analytics.png)
+
+#### Tendencies Lab
+![Tendencies Lab](docs/screenshots/tendencies-lab.png)
+
+#### Matchup Simulator
+![Matchup Simulator](docs/screenshots/matchup-simulator.png)
 
 ### Setup & Commands
 
