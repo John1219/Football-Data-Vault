@@ -1,16 +1,20 @@
 import { useEffect, useState } from 'react';
-import { Activity, BarChart3, Database, PlayCircle, Terminal } from 'lucide-react';
+import { Activity, BarChart3, Compass, Database, Dices, PlayCircle, Terminal } from 'lucide-react';
 import { HealthStatus, vaultApi } from './api';
 import AdvancedStats from './components/AdvancedStats';
+import MatchupSimulator from './components/MatchupSimulator';
 import PlayRecreator from './components/PlayRecreator';
 import SqlChartStudio from './components/SqlChartStudio';
+import TendenciesLab from './components/TendenciesLab';
 import VaultManager from './components/VaultManager';
 
-type TabId = 'recreator' | 'analytics' | 'sql' | 'vault';
+type TabId = 'recreator' | 'analytics' | 'tendencies' | 'simulator' | 'sql' | 'vault';
 
 const TABS: { id: TabId; label: string; icon: typeof PlayCircle }[] = [
   { id: 'recreator', label: 'Play-by-Play Recreator', icon: PlayCircle },
   { id: 'analytics', label: 'Advanced Analytics', icon: BarChart3 },
+  { id: 'tendencies', label: 'Tendencies Lab', icon: Compass },
+  { id: 'simulator', label: 'Matchup Simulator', icon: Dices },
   { id: 'sql', label: 'SQL & Chart Studio', icon: Terminal },
   { id: 'vault', label: 'Vault & Media Manager', icon: Database },
 ];
@@ -90,6 +94,8 @@ export default function App() {
       <main className="mx-auto max-w-7xl p-4">
         {activeTab === 'recreator' && <PlayRecreator />}
         {activeTab === 'analytics' && <AdvancedStats />}
+        {activeTab === 'tendencies' && <TendenciesLab />}
+        {activeTab === 'simulator' && <MatchupSimulator />}
         {activeTab === 'sql' && <SqlChartStudio />}
         {activeTab === 'vault' && <VaultManager />}
       </main>

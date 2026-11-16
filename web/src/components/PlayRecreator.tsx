@@ -103,7 +103,7 @@ function clamp(v: number, min: number, max: number): number {
 
 export default function PlayRecreator() {
   const [seasons, setSeasons] = useState<number[]>([]);
-  const [selectedSeason, setSelectedSeason] = useState<number>(2024);
+  const [selectedSeason, setSelectedSeason] = useState<number>(2026);
   const [weeks, setWeeks] = useState<number[]>([]);
   const [selectedWeek, setSelectedWeek] = useState<number>(1);
   const [games, setGames] = useState<GameOption[]>([]);
@@ -129,7 +129,7 @@ export default function PlayRecreator() {
         const list = res.rows.map((r) => Number(r.season)).filter((n) => !Number.isNaN(n));
         setSeasons(list);
         if (list.length > 0) {
-          setSelectedSeason(list.includes(2024) ? 2024 : list[0]);
+          setSelectedSeason(list[0]);
         }
       })
       .catch((e) => setError(e.message));
